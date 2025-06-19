@@ -1,0 +1,12 @@
+# azure-pipelines.yml
+trigger:
+  - featurebranch  # or your branch name
+
+pool:
+   vmImage: 'ubuntu-latest'
+
+steps:
+  - script: |
+      chmod +x hello.sh
+      ./hello.sh
+    displayName: 'Run hello.sh script'
