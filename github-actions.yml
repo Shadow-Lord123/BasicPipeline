@@ -1,0 +1,20 @@
+name: Run hello.sh
+
+# Trigger on push to 'featurebranch'
+on:
+  push:
+    branches:
+      - featurebranch
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Make hello.sh executable and run it
+        run: |
+          chmod +x hello.sh
+          ./hello.sh
