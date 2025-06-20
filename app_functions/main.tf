@@ -21,11 +21,13 @@ resource "azurerm_service_plan" "example" {
   os_type  = "Windows"
 }
 
-resource "azurerm_function_app" "example" {
+resource "azurerm_windows_function_app" "example" {
   name                       = "test-azure-functions"
   location                   = var.location_name
   resource_group_name        = var.rg_name
-  app_service_plan_id        = azurerm_service_plan.example.id
+  service_plan_id            = azurerm_service_plan.example.id
   storage_account_name       = azurerm_storage_account.example.name
   storage_account_access_key = azurerm_storage_account.example.primary_access_key
+
+  site_config {}
 }

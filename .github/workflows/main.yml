@@ -1,4 +1,4 @@
-# My First Pipeline
+
 name: Deploy Azure Function App
 
 # Trigger on push to 'featurebranch'
