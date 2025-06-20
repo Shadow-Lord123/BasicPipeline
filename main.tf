@@ -4,3 +4,4 @@ module "app_functions" {
   rg_name = var.rg_name
   location_name = var.location_name     
 }
+
