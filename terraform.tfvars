@@ -1,3 +1,3 @@
 
-rg_name = "DevRG"
+#rg_name = "DevRG"
 location_name = "UK South"
