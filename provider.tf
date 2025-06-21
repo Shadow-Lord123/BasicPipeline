@@ -12,10 +12,6 @@ terraform {
 # Provider uses the variables
 provider "azurerm" {
   features {}
-  Client_ID       = var.Client_ID
-  Client_Secret   = var.Client_Secret
-  Subscription_ID = var.Subscription_ID
-  Tenant_ID       = var.Tenant_ID
 }
 
 
