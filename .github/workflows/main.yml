@@ -1,101 +1,29 @@
-name: Robust Deploy or Destroy Azure Function App
+    - name: Check and Import critical resources (main + AKS MC RG)
+      id: import
+      run: |
+        RG_NAME="DevRG"
+        AKS_NAME="kritagyaaks1"
+        LOCATION="uksouth"
+        MC_RG_NAME="MC_${RG_NAME}_${AKS_NAME}_${LOCATION}"
 
-on:
-  push:
-    branches:
-      - featurebranch
-  workflow_dispatch:
-    inputs:
-      action:
-        description: 'Terraform action to perform: apply or destroy'
-        required: true
-        default: 'destroy'
-        type: choice
-        options:
-          - apply
-          - destroy
+        echo "Checking if $RG_NAME exists in Azure..."
+        EXISTS_MAIN=$(az group exists --name "$RG_NAME")
 
-jobs:
-  terraform:
-    runs-on: ubuntu-latest
+        echo "Checking if $MC_RG_NAME exists in Azure..."
+        EXISTS_MC=$(az group exists --name "$MC_RG_NAME")
 
-    env:  
-      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        echo "Checking Terraform state for main RG..."
+        terraform state list | grep "azurerm_resource_group.example" || IN_STATE_MAIN="no"
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+        echo "Checking Terraform state for MC RG..."
+        terraform state list | grep "azurerm_resource_group.mc_node_rg" || IN_STATE_MC="no"
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        if [ "$EXISTS_MAIN" == "true" ] && [ "$IN_STATE_MAIN" == "no" ]; then
+          echo "Main RG exists but not in state — importing..."
+          terraform import azurerm_resource_group.example "/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/$RG_NAME"
+        fi
 
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Refresh
-        run: terraform refresh
-
-      - name: Check state and decide action
-        id: decide
-        run: |
-          # Get input action or default
-          action="${{ github.event.inputs.action }}"
-          if [ -z "$action" ]; then
-            action="destroy"
-          fi
-
-          echo "Requested action: $action"
-
-          # List current resources in state
-          echo "Checking state resources..."
-          terraform state list > state_resources.txt || true
-
-          echo "State resources:"
-          cat state_resources.txt
-
-          if [ -s state_resources.txt ]; then
-            echo "Resources exist in state."
-
-            if [ "$action" == "destroy" ]; then
-              echo "Resources exist + destroy requested => proceed to destroy."
-              echo "FINAL_ACTION=destroy" >> $GITHUB_ENV
-            else
-              echo "Resources exist + apply requested => proceed to apply."
-              echo "FINAL_ACTION=apply" >> $GITHUB_ENV
-            fi
-
-          else
-            echo "No resources in state."
-
-            if [ "$action" == "destroy" ]; then
-              echo "Nothing to destroy => fallback to apply to create resources."
-              echo "FINAL_ACTION=apply" >> $GITHUB_ENV
-            else
-              echo "Apply requested => proceed to apply."
-              echo "FINAL_ACTION=apply" >> $GITHUB_ENV
-            fi
-          fi
-
-      - name: Terraform Plan
-        run: |
-          echo "Planning based on FINAL_ACTION=$FINAL_ACTION"
-          if [ "$FINAL_ACTION" == "destroy" ]; then
-            terraform plan -destroy -out=tfplan
-          else
-            terraform plan -out=tfplan
-          fi
-
-      - name: Terraform Apply or Destroy
-        run: |
-          echo "Executing FINAL_ACTION=$FINAL_ACTION"
-          if [ "$FINAL_ACTION" == "destroy" ]; then
-            terraform destroy -auto-approve
-          else
-            terraform apply -auto-approve
-          fi
+        if [ "$EXISTS_MC" == "true" ] && [ "$IN_STATE_MC" == "no" ]; then
+          echo "MC RG exists but not in state — importing..."
+          terraform import azurerm_resource_group.mc_node_rg "/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/$MC_RG_NAME"
+        fi
