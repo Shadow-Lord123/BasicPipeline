@@ -1,12 +1,12 @@
 
 name: Delete Azure Function App
 
-# This allows you to run it manually from GitHub UI
+# Manual trigger from GitHub UI
 on:
   workflow_dispatch:
 
 jobs:
-  terraform:
+  terraform-destroy:
     runs-on: ubuntu-latest
 
     env:
