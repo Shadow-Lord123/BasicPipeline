@@ -1,5 +1,5 @@
 
-name: Deploy or Destroy Azure Function App
+name: Smart Deploy or Destroy Azure Function App
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
       action:
         description: 'Terraform action to perform: apply or destroy'
         required: true
-        default: 'apply'
+        default: 'destroy'
         type: choice
         options:
           - apply
@@ -39,28 +39,41 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Terraform Plan
+      - name: Terraform Smart Plan
+        id: plan
         run: |
           action="${{ github.event.inputs.action }}"
           if [ -z "$action" ]; then
-            action="apply"
+            action="destroy"
           fi
 
+          echo "Action: $action"
+
           if [ "$action" == "destroy" ]; then
-            terraform plan -destroy
+            echo "Running destroy plan..."
+            terraform plan -destroy -out=tfplan > plan_output.txt
+
+            echo "Plan output:"
+            cat plan_output.txt
+
+            if grep -q "No changes. Infrastructure is up-to-date." plan_output.txt || grep -q "0 to destroy" plan_output.txt; then
+              echo "Nothing to destroy — switching to apply instead."
+              echo "FINAL_ACTION=apply" >> $GITHUB_ENV
+            else
+              echo "FINAL_ACTION=destroy" >> $GITHUB_ENV
+            fi
           else
-            terraform plan
+            terraform plan -out=tfplan
+            echo "FINAL_ACTION=apply" >> $GITHUB_ENV
           fi
 
       - name: Terraform Apply or Destroy
         run: |
-          action="${{ github.event.inputs.action }}"
-          if [ -z "$action" ]; then
-            action="apply"
-          fi
+          echo "Final action is: $FINAL_ACTION"
 
-          if [ "$action" == "destroy" ]; then
+          if [ "$FINAL_ACTION" == "destroy" ]; then
             terraform destroy -auto-approve
           else
             terraform apply -auto-approve
           fi
+
