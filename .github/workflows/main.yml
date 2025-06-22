@@ -38,15 +38,22 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
+      - name: Terraform Refresh
+        run: terraform refresh
+
       - name: Terraform Smart Plan
         id: plan
         run: |
+          # Determine action: manual input or default
           action="${{ github.event.inputs.action }}"
           if [ -z "$action" ]; then
             action="destroy"
           fi
 
-          echo "Action: $action"
+          echo "Requested action: $action"
+
+          # Refresh to sync state with real cloud before planning
+          terraform refresh
 
           if [ "$action" == "destroy" ]; then
             echo "Running destroy plan..."
@@ -56,12 +63,14 @@ jobs:
             cat plan_output.txt
 
             if grep -q "No changes. Infrastructure is up-to-date." plan_output.txt || grep -q "0 to destroy" plan_output.txt; then
-              echo "Nothing to destroy — switching to apply instead."
+              echo "Nothing to destroy — will switch to apply instead."
               echo "FINAL_ACTION=apply" >> $GITHUB_ENV
             else
+              echo "Destroy needed."
               echo "FINAL_ACTION=destroy" >> $GITHUB_ENV
             fi
           else
+            echo "Running apply plan..."
             terraform plan -out=tfplan
             echo "FINAL_ACTION=apply" >> $GITHUB_ENV
           fi
@@ -71,8 +80,9 @@ jobs:
           echo "Final action is: $FINAL_ACTION"
 
           if [ "$FINAL_ACTION" == "destroy" ]; then
+            echo "Executing destroy..."
             terraform destroy -auto-approve
           else
+            echo "Executing apply..."
             terraform apply -auto-approve
           fi
-
