@@ -1,4 +1,5 @@
-name: Smart Deploy or Destroy Azure Function App
+
+name: Robust Deploy or Destroy Azure Function App
 
 on:
   push:
@@ -41,10 +42,10 @@ jobs:
       - name: Terraform Refresh
         run: terraform refresh
 
-      - name: Terraform Smart Plan
-        id: plan
+      - name: Check state and decide action
+        id: decide
         run: |
-          # Determine action: manual input or default
+          # Get input action or default
           action="${{ github.event.inputs.action }}"
           if [ -z "$action" ]; then
             action="destroy"
@@ -52,37 +53,50 @@ jobs:
 
           echo "Requested action: $action"
 
-          # Refresh to sync state with real cloud before planning
-          terraform refresh
+          # List current resources in state
+          echo "Checking state resources..."
+          terraform state list > state_resources.txt || true
 
-          if [ "$action" == "destroy" ]; then
-            echo "Running destroy plan..."
-            terraform plan -destroy -out=tfplan > plan_output.txt
+          echo "State resources:"
+          cat state_resources.txt
 
-            echo "Plan output:"
-            cat plan_output.txt
+          if [ -s state_resources.txt ]; then
+            echo "Resources exist in state."
 
-            if grep -q "No changes. Infrastructure is up-to-date." plan_output.txt || grep -q "0 to destroy" plan_output.txt; then
-              echo "Nothing to destroy — will switch to apply instead."
+            if [ "$action" == "destroy" ]; then
+              echo "Resources exist + destroy requested => proceed to destroy."
+              echo "FINAL_ACTION=destroy" >> $GITHUB_ENV
+            else
+              echo "Resources exist + apply requested => proceed to apply."
+              echo "FINAL_ACTION=apply" >> $GITHUB_ENV
+            fi
+
+          else
+            echo "No resources in state."
+
+            if [ "$action" == "destroy" ]; then
+              echo "Nothing to destroy => fallback to apply to create resources."
               echo "FINAL_ACTION=apply" >> $GITHUB_ENV
             else
-              echo "Destroy needed."
-              echo "FINAL_ACTION=destroy" >> $GITHUB_ENV
+              echo "Apply requested => proceed to apply."
+              echo "FINAL_ACTION=apply" >> $GITHUB_ENV
             fi
+          fi
+
+      - name: Terraform Plan
+        run: |
+          echo "Planning based on FINAL_ACTION=$FINAL_ACTION"
+          if [ "$FINAL_ACTION" == "destroy" ]; then
+            terraform plan -destroy -out=tfplan
           else
-            echo "Running apply plan..."
             terraform plan -out=tfplan
-            echo "FINAL_ACTION=apply" >> $GITHUB_ENV
           fi
 
       - name: Terraform Apply or Destroy
         run: |
-          echo "Final action is: $FINAL_ACTION"
-
+          echo "Executing FINAL_ACTION=$FINAL_ACTION"
           if [ "$FINAL_ACTION" == "destroy" ]; then
-            echo "Executing destroy..."
             terraform destroy -auto-approve
           else
-            echo "Executing apply..."
             terraform apply -auto-approve
           fi
