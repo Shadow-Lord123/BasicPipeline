@@ -1,5 +1,4 @@
 
-
 resource "azurerm_resource_group" "example" {
   name     = "DevRG"
   location = var.location_name
