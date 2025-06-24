@@ -7,3 +7,4 @@ variable "location_name" {
   description = "Location Name for VPC"
   type        = string
 }
+

@@ -1,33 +1,54 @@
 
 resource "azurerm_resource_group" "example" {
-  name     = "azure-functions-test-rg"
-  location = "UK South"
+  name     = "DevRG"
+  location = var.location_name
 }
 
 resource "azurerm_storage_account" "example" {
-  name                     = "functionsapptestsa"
-  resource_group_name      = var.rg_name
-  location                 = var.location_name
+  name                     = "kritagyafuncappsa"
+  resource_group_name      = azurerm_resource_group.example.name   
+  location                 = azurerm_resource_group.example.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }
 
-resource "azurerm_app_service_plan" "example" {
+resource "azurerm_service_plan" "example" {
   name                = "azure-functions-test-service-plan"
-  location            = var.location_name
-  resource_group_name = var.rg_name
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name        
 
-  sku {
-    tier = "Standard"
-    size = "S1"
-  }
+  sku_name = "S1"
+  os_type  = "Windows"
 }
 
-resource "azurerm_function_app" "example" {
-  name                       = "test-azure-functions"
-  location                   = var.location_name
-  resource_group_name        = var.rg_name
-  app_service_plan_id        = azurerm_app_service_plan.example.id
+resource "azurerm_windows_function_app" "example" {
+  name                       = "kritagyafunction"
+  location                   = azurerm_resource_group.example.location
+  resource_group_name        = azurerm_resource_group.example.name 
+  service_plan_id            = azurerm_service_plan.example.id
   storage_account_name       = azurerm_storage_account.example.name
   storage_account_access_key = azurerm_storage_account.example.primary_access_key
+
+  site_config {}
+}
+
+resource "azurerm_kubernetes_cluster" "example" {
+  name                = "kritagyaaks1"
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name        
+  dns_prefix          = "kritagyadns"
+
+  default_node_pool {
+    name       = "default"
+    node_count = 1
+    vm_size    = "Standard_D2_v2"
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  tags = {
+    Environment = "Production"
+  }
 }
