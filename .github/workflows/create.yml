@@ -2,9 +2,6 @@
 name: Deploy Azure Function App
 
 on:
-  push:
-    branches:
-      - featurebranch
   workflow_dispatch:
 
 jobs:
@@ -35,4 +32,3 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
-

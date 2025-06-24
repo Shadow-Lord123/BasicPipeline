@@ -2,11 +2,7 @@
 name: Destroy Azure Function App
 
 on:
-  push:
-    branches:
-      - featurebranch
   workflow_dispatch:
-
 
 jobs:
   terraform:
@@ -25,7 +21,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform Init 
+      - name: Terraform Init
         run: terraform init
 
       - name: Terraform Destroy
