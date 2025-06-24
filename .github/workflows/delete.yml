@@ -1,7 +1,11 @@
 name: Destroy Azure Function App
 
 on:
+  push:
+    branches:
+      - featurebranch
   workflow_dispatch:
+
 
 jobs:
   terraform:
