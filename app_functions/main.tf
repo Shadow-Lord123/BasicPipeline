@@ -37,6 +37,8 @@ resource "azurerm_kubernetes_cluster" "example" {
   location            = azurerm_resource_group.example.location
   resource_group_name = azurerm_resource_group.example.name        
   dns_prefix          = "kritagyadns"
+  
+  node_resource_group = "DefaultRG"
 
   default_node_pool {
     name       = "default"

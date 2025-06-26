@@ -5,3 +5,9 @@ module "app_functions" {
   location_name = var.location_name     
 }
 
+module "kubernetes_services" {
+  source = "./kubernetes_services" 
+  dev_rg_name = module.app_functions.resource_group_name
+  location_name = var.location_name     
+}
+
