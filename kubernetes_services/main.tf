@@ -1,9 +1,11 @@
 
 resource "azurerm_kubernetes_cluster" "example" {
-  name                = "example-aks1"
-  location            = var.location_name
-  resource_group_name = var.dev_rg_name
-  dns_prefix          = "exampleaks1"
+  name                = "kritagyaaks1"
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name        
+  dns_prefix          = "kritagyadns"
+  
+  node_resource_group = "DefaultRG"
 
   default_node_pool {
     name       = "default"
