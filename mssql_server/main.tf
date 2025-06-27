@@ -1,9 +1,4 @@
 
-resource "azurerm_resource_group" "example" {
-  name     = var.dev_rg_name
-  location = var.location_name
-}
-
 resource "azurerm_mssql_server" "example" {
   name                         = "kritagyasqlserver"
   resource_group_name          = var.dev_rg_name
