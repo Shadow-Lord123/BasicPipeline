@@ -17,4 +17,9 @@ module "mssql_server" {
   location_name = var.location_name     
 }
 
+module "data_factory" {
+  source = "./data_factory" 
+  dev_rg_name = module.app_functions.resource_group_name
+  location_name = var.location_name     
+}
 
