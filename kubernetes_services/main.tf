@@ -25,7 +25,8 @@ resource "azurerm_kubernetes_cluster" "example" {
     type = "SystemAssigned"
   }
 
-  azure_active_directory_role_based_access_control {
+  azure_active_directory {
+    azure_rbac_enabled     = true
     managed                = true
     admin_group_object_ids = [data.azuread_group.aks_admins.object_id]
   }
@@ -41,11 +42,8 @@ resource "azurerm_kubernetes_cluster" "example" {
     outbound_type      = "loadBalancer"
   }
 
-  addon_profile {
-    oms_agent {
-      enabled                    = true
-      log_analytics_workspace_id = data.azurerm_log_analytics_workspace.example.id
-    }
+  oms_agent {
+    log_analytics_workspace_id = data.azurerm_log_analytics_workspace.example.id
   }
 
   azure_policy_enabled               = true
@@ -59,3 +57,4 @@ resource "azurerm_kubernetes_cluster" "example" {
     Purpose     = "AKS Cluster"
   }
 }
+
