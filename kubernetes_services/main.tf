@@ -13,7 +13,6 @@ resource "azurerm_kubernetes_cluster" "example" {
   location            = var.location_name
   resource_group_name = var.dev_rg_name
   dns_prefix          = "kritagyadns"
-  
   node_resource_group = "DefaultRG"
 
   default_node_pool {
@@ -26,7 +25,6 @@ resource "azurerm_kubernetes_cluster" "example" {
     orchestrator_version  = "1.29.0"
     enable_node_public_ip = false
     type                  = "VirtualMachineScaleSets"
-    availability_zones    = ["1", "2", "3"]
   }
 
   identity {
@@ -34,11 +32,11 @@ resource "azurerm_kubernetes_cluster" "example" {
   }
 
   auto_scaler_profile {
-    balance_similar_node_groups    = true
-    expander                       = "least-waste"
-    max_graceful_termination_sec   = 600
-    scale_down_delay_after_add     = "10m"
-    scan_interval                  = "20s"
+    balance_similar_node_groups  = true
+    expander                     = "least-waste"
+    max_graceful_termination_sec = 600
+    scale_down_delay_after_add   = "10m"
+    scan_interval                = "20s"
   }
 
   azure_active_directory_role_based_access_control {
@@ -47,8 +45,7 @@ resource "azurerm_kubernetes_cluster" "example" {
   }
 
   api_server_access_profile {
-    enable_private_cluster = false
-    authorized_ip_ranges   = ["0.0.0.0/0"]
+    authorized_ip_ranges = ["0.0.0.0/0"]
   }
 
   network_profile {
@@ -58,29 +55,16 @@ resource "azurerm_kubernetes_cluster" "example" {
     outbound_type      = "loadBalancer"
   }
 
-  addon_profile {
-    azure_policy {
-      enabled = true
-    }
+  azure_policy_enabled              = true
+  http_application_routing_enabled = false
 
-    oms_agent {
-      enabled                    = true
-      log_analytics_workspace_id = data.azurerm_log_analytics_workspace.example.id
-    }
-
-    kube_dashboard {
-      enabled = false
-    }
-
-    ingress_application_gateway {
-      enabled = false
-    }
+  oms_agent {
+    enabled                    = true
+    log_analytics_workspace_id = data.azurerm_log_analytics_workspace.example.id
   }
 
   role_based_access_control_enabled = true
-  http_application_routing_enabled  = false
-
-  sku_tier = "Standard"
+  sku_tier                          = "Standard"
 
   tags = {
     Environment = "Production"
@@ -88,4 +72,3 @@ resource "azurerm_kubernetes_cluster" "example" {
     Purpose     = "AKS Cluster"
   }
 }
-

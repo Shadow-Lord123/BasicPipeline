@@ -23,7 +23,7 @@ resource "azurerm_mssql_server" "example" {
 
   public_network_access_enabled       = false
   outbound_network_restriction_enabled = true
-  primary_user_assigned_identity_id   = null # system-assigned identity used
+  primary_user_assigned_identity_id   = null 
   connection_policy                   = "Default"
 
   tags = {
