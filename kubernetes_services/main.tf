@@ -1,23 +1,91 @@
 
+data "azurerm_log_analytics_workspace" "example" {
+  name                = "loganalytics-kritagya"
+  resource_group_name = var.dev_rg_name
+}
+
+data "azuread_group" "aks_admins" {
+  display_name = "AKS-Admins"
+}
+
 resource "azurerm_kubernetes_cluster" "example" {
   name                = "kritagyaaks1"
   location            = var.location_name
-  resource_group_name = var.dev_rg_name       
+  resource_group_name = var.dev_rg_name
   dns_prefix          = "kritagyadns"
   
   node_resource_group = "DefaultRG"
 
   default_node_pool {
-    name       = "default"
-    node_count = 1
-    vm_size    = "Standard_D2_v2"
+    name                  = "default"
+    node_count            = 1
+    vm_size               = "Standard_D2_v2"
+    enable_auto_scaling   = true
+    min_count             = 1
+    max_count             = 3
+    orchestrator_version  = "1.29.0"
+    enable_node_public_ip = false
+    type                  = "VirtualMachineScaleSets"
+    availability_zones    = ["1", "2", "3"]
   }
 
   identity {
     type = "SystemAssigned"
   }
 
+  auto_scaler_profile {
+    balance_similar_node_groups    = true
+    expander                       = "least-waste"
+    max_graceful_termination_sec   = 600
+    scale_down_delay_after_add     = "10m"
+    scan_interval                  = "20s"
+  }
+
+  azure_active_directory_role_based_access_control {
+    managed                 = true
+    admin_group_object_ids = [data.azuread_group.aks_admins.object_id]
+  }
+
+  api_server_access_profile {
+    enable_private_cluster = false
+    authorized_ip_ranges   = ["0.0.0.0/0"]
+  }
+
+  network_profile {
+    network_plugin     = "azure"
+    network_policy     = "azure"
+    load_balancer_sku  = "standard"
+    outbound_type      = "loadBalancer"
+  }
+
+  addon_profile {
+    azure_policy {
+      enabled = true
+    }
+
+    oms_agent {
+      enabled                    = true
+      log_analytics_workspace_id = data.azurerm_log_analytics_workspace.example.id
+    }
+
+    kube_dashboard {
+      enabled = false
+    }
+
+    ingress_application_gateway {
+      enabled = false
+    }
+  }
+
+  role_based_access_control_enabled = true
+  http_application_routing_enabled  = false
+
+  sku_tier = "Standard"
+
   tags = {
     Environment = "Production"
+    Owner       = "Kritagya"
+    Purpose     = "AKS Cluster"
   }
 }
+
