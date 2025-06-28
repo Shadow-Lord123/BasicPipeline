@@ -16,31 +16,17 @@ resource "azurerm_kubernetes_cluster" "example" {
   node_resource_group = "DefaultRG"
 
   default_node_pool {
-    name                  = "default"
-    node_count            = 1
-    vm_size               = "Standard_D2_v2"
-    enable_auto_scaling   = true
-    min_count             = 1
-    max_count             = 3
-    orchestrator_version  = "1.29.0"
-    enable_node_public_ip = false
-    type                  = "VirtualMachineScaleSets"
+    name       = "default"
+    node_count = 1
+    vm_size    = "Standard_D2_v2"
   }
 
   identity {
     type = "SystemAssigned"
   }
 
-  auto_scaler_profile {
-    balance_similar_node_groups  = true
-    expander                     = "least-waste"
-    max_graceful_termination_sec = 600
-    scale_down_delay_after_add   = "10m"
-    scan_interval                = "20s"
-  }
-
-  azure_active_directory_role_based_access_control {
-    managed                 = true
+  azure_active_directory {
+    managed                = true
     admin_group_object_ids = [data.azuread_group.aks_admins.object_id]
   }
 
@@ -58,7 +44,7 @@ resource "azurerm_kubernetes_cluster" "example" {
   azure_policy_enabled              = true
   http_application_routing_enabled = false
 
-  oms_agent {
+  monitor_metrics {
     enabled                    = true
     log_analytics_workspace_id = data.azurerm_log_analytics_workspace.example.id
   }
