@@ -1,4 +1,13 @@
 
+data "azurerm_log_analytics_workspace" "example" {
+  name                = "loganalytics-kritagya"
+  resource_group_name = var.dev_rg_name
+}
+
+data "azuread_group" "aks_admins" {
+  display_name = "AKS-Admins"
+}
+
 resource "azurerm_kubernetes_cluster" "example" {
   name                = "kritagyaaks1"
   location            = var.location_name
@@ -17,21 +26,21 @@ resource "azurerm_kubernetes_cluster" "example" {
   }
 
   aad_profile {
-    managed                = true
-    enable_azure_rbac      = true
-    admin_group_object_ids = [data.azuread_group.aks_admins.object_id]
-  }
+  managed                = true
+  enable_azure_rbac      = true
+  admin_group_object_ids = [data.azuread_group.aks_admins.object_id]
+ }
 
   api_server_access_profile {
     authorized_ip_ranges = ["0.0.0.0/0"]
-  }
+ }
 
   network_profile {
     network_plugin     = "azure"
     network_policy     = "azure"
     load_balancer_sku  = "standard"
     outbound_type      = "loadBalancer"
-  }
+ }
 
   oms_agent {
     log_analytics_workspace_id = data.azurerm_log_analytics_workspace.example.id
@@ -48,5 +57,4 @@ resource "azurerm_kubernetes_cluster" "example" {
     Purpose     = "AKS Cluster"
   }
 }
-
 
