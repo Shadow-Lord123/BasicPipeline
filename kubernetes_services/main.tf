@@ -26,7 +26,7 @@ resource "azurerm_kubernetes_cluster" "example" {
   }
 
   azure_active_directory_role_based_access_control {
-    managed                 = true
+    managed                = true
     admin_group_object_ids = [data.azuread_group.aks_admins.object_id]
   }
 
@@ -48,10 +48,10 @@ resource "azurerm_kubernetes_cluster" "example" {
     }
   }
 
-  azure_policy_enabled              = true
-  http_application_routing_enabled = false
+  azure_policy_enabled               = true
+  http_application_routing_enabled  = false
   role_based_access_control_enabled = true
-  sku_tier                          = "Standard"
+  sku_tier                           = "Standard"
 
   tags = {
     Environment = "Production"
