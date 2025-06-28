@@ -25,22 +25,22 @@ resource "azurerm_kubernetes_cluster" "example" {
     type = "SystemAssigned"
   }
 
-  azure_active_directory {
-    azure_rbac_enabled     = true
-    managed                = true
-    admin_group_object_ids = [data.azuread_group.aks_admins.object_id]
-  }
+  aad_profile {
+  managed                = true
+  enable_azure_rbac      = true
+  admin_group_object_ids = [data.azuread_group.aks_admins.object_id]
+ }
 
   api_server_access_profile {
     authorized_ip_ranges = ["0.0.0.0/0"]
-  }
+ }
 
   network_profile {
     network_plugin     = "azure"
     network_policy     = "azure"
     load_balancer_sku  = "standard"
     outbound_type      = "loadBalancer"
-  }
+ }
 
   oms_agent {
     log_analytics_workspace_id = data.azurerm_log_analytics_workspace.example.id
