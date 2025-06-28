@@ -8,13 +8,14 @@ module "app_functions" {
 module "kubernetes_services" {
   source = "./kubernetes_services" 
   dev_rg_name = module.app_functions.resource_group_name
-  location_name = var.location_name     
+  location_name = var.location_name
+  object_id     = var.object_id
 }
 
 module "mssql_server" {
   source = "./mssql_server" 
   dev_rg_name = module.app_functions.resource_group_name
-  location_name = var.location_name     
+  location_name = var.location_name      
 }
 
 module "data_factory" {

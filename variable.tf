@@ -8,3 +8,7 @@ variable "location_name" {
   type        = string
 }
 
+variable "object_id" {
+  description = "The object ID of the Azure AD group or user."
+  type        = string
+}

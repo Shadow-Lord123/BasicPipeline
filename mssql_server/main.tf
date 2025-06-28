@@ -1,8 +1,4 @@
 
-data "azuread_user" "sql_admin" {
-  user_principal_name = "kritagyadahal345@gmail.com"
-}
-
 resource "azurerm_mssql_server" "example" {
   name                         = "kritagyasqlserver"
   resource_group_name          = var.dev_rg_name
@@ -12,23 +8,12 @@ resource "azurerm_mssql_server" "example" {
   administrator_login_password = "thisIsKat11"
   minimum_tls_version          = "1.2"
 
-  identity {
-    type = "SystemAssigned"
-  }
-
   azuread_administrator {
-    login_username = data.azuread_user.sql_admin.user_principal_name
-    object_id      = data.azuread_user.sql_admin.object_id
+    login_username = "AzureAD Admin"
+    object_id      = var.object_id
   }
-
-  public_network_access_enabled       = false
-  outbound_network_restriction_enabled = true
-  primary_user_assigned_identity_id   = null 
-  connection_policy                   = "Default"
 
   tags = {
     environment = "production"
-    owner       = "Kritagya"
-    tier        = "critical"
   }
 }

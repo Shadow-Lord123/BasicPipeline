@@ -1,13 +1,4 @@
 
-data "azurerm_log_analytics_workspace" "example" {
-  name                = "loganalytics-kritagya"
-  resource_group_name = var.dev_rg_name
-}
-
-data "azuread_group" "aks_admins" {
-  display_name = "AKS-Admins"
-}
-
 resource "azurerm_kubernetes_cluster" "example" {
   name                = "kritagyaaks1"
   location            = var.location_name
@@ -15,19 +6,29 @@ resource "azurerm_kubernetes_cluster" "example" {
   dns_prefix          = "kritagyadns"
   node_resource_group = "DefaultRG"
 
+  kubernetes_version = "1.29.2"
+
   default_node_pool {
-    name       = "default"
-    node_count = 1
-    vm_size    = "Standard_D2_v2"
+    name                = "default"
+    node_count          = 2
+    vm_size             = "Standard_D4s_v3"
+    enable_auto_scaling = true
+    min_count           = 2
+    max_count           = 5
+    os_disk_size_gb     = 100
+    type                = "VirtualMachineScaleSets"
+    mode                = "System"
+    node_labels = {
+      environment = "production"
+    }
   }
 
   identity {
     type = "SystemAssigned"
   }
 
-  api_server_access_profile {
-    authorized_ip_ranges = ["0.0.0.0/0"]
-  }
+  role_based_access_control_enabled = true
+  azure_policy_enabled              = true
 
   network_profile {
     network_plugin     = "azure"
@@ -36,18 +37,20 @@ resource "azurerm_kubernetes_cluster" "example" {
     outbound_type      = "loadBalancer"
   }
 
-  oms_agent {
-    log_analytics_workspace_id = data.azurerm_log_analytics_workspace.example.id
+  auto_upgrade_profile {
+    upgrade_channel = "stable"
   }
 
-  azure_policy_enabled               = true
-  http_application_routing_enabled  = false
-  role_based_access_control_enabled = true
-  sku_tier                           = "Standard"
+  diagnostics_profile {
+    enabled = true
+  }
+
+  sku_tier = "Standard"
 
   tags = {
     Environment = "Production"
     Owner       = "Kritagya"
-    Purpose     = "AKS Cluster"
+    Purpose     = "Minimal AKS Cluster"
   }
 }
+
