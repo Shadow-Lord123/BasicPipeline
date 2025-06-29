@@ -9,15 +9,11 @@ resource "azurerm_kubernetes_cluster" "example" {
   kubernetes_version = "1.29.2"
 
   default_node_pool {
-    name                = "default"
-    node_count          = 2
-    vm_size             = "Standard_D4s_v3"
-    enable_auto_scaling = true
-    min_count           = 2
-    max_count           = 5
-    os_disk_size_gb     = 100
-    type                = "VirtualMachineScaleSets"
-    mode                = "System"
+    name       = "default"
+    node_count = 2
+    vm_size    = "Standard_D4s_v3"
+    os_disk_size_gb = 100
+
     node_labels = {
       environment = "production"
     }
@@ -37,20 +33,11 @@ resource "azurerm_kubernetes_cluster" "example" {
     outbound_type      = "loadBalancer"
   }
 
-  auto_upgrade_profile {
-    upgrade_channel = "stable"
-  }
-
-  diagnostics_profile {
-    enabled = true
-  }
-
   sku_tier = "Standard"
 
   tags = {
     Environment = "Production"
     Owner       = "Kritagya"
-    Purpose     = "Minimal AKS Cluster"
+    Purpose     = "Simplified AKS Cluster"
   }
 }
-
